@@ -67,19 +67,32 @@ public class CricketBallSwing : MonoBehaviour
         if (hasThrown || !pitchMarker) return;
 
         pathDrawer.StartDrawing();
-
         rb.isKinematic = false;
 
         timer = 0f;
         hasThrown = true;
         hasPitched = false;
 
+        float swingTime = Mathf.Max(0f, timeToPitch - swingDelay);
+        float swingAcceleration = swingForce / rb.mass;
+        float lateralDisplacement = 0.5f * swingAcceleration * swingTime * swingTime;
+
+        Vector3 forwardDir = (pitchMarker.position - transform.position).normalized;
+
+        Vector3 swingDir = swingRight
+            ? Vector3.Cross(Vector3.up, forwardDir)
+            : Vector3.Cross(forwardDir, Vector3.up);
+
+        Vector3 compensatedTarget =
+            pitchMarker.position - swingDir.normalized * lateralDisplacement;
+
         rb.velocity = CalculateLaunchVelocity(
             transform.position,
-            pitchMarker.position,
+            compensatedTarget,
             timeToPitch
         );
     }
+
 
     void PitchBall()
     {
